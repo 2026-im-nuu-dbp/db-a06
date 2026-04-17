@@ -1,0 +1,113 @@
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Microsoft JhengHei", sans-serif;
+    display: grid;
+    place-items: center;
+    background: #f3f3f3;
+}
+
+.container {
+    background: #fff;
+    border: 2px solid #111;
+    padding: 30px;
+    width: 100%;                                                    /* 外框 */
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+
+h1 {
+    text-align: center;                                             /* 標題 */
+    margin-bottom: 20px;
+}
+
+
+form {
+    display: grid;                                                  /* 表單排版 */
+    gap: 12px;
+}
+
+
+label {
+    font-weight: bold;                                              /* 標籤 */
+}
+
+
+input {
+    padding: 10px;                                                  /* 輸入框 */
+    border: 1px solid #111;
+}
+
+
+fieldset {
+    border: 1px solid #111;                                       /* 區塊 */
+    padding: 10px;
+}
+
+
+.inline-option {
+    margin-right: 10px;                                             /* checkbox / radio 排版 */
+}
+
+
+.submit-btn {
+    background: #111;
+    color: #fff;
+    padding: 10px;                                                  /* 按鈕 */
+    border: none;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background: #333;
+}
+
+
+.note {
+    text-align: center;                                             /* 備註 */
+    margin-top: 10px;
+}
+
+.link-btn {
+    color: #111;
+    text-decoration: underline;
+}
+
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1.6px solid #111;
+    font-size: 0.95rem;
+}
+
+hr {
+    margin: 20px 0;
+    border: none;
+    border-top: 1px solid #ccc;
+}
+
+.memo-list {
+    margin-top: 10px;
+}
+
+
+.memo-card {
+    border: 1.6px solid #111;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #fff;
+    transition: transform 0.2s ease;
+}
+
+
+.memo-card img {
+    width: 100%;
+    max-width: 250px;
+    margin-top: 10px;
+}
+
+.memo-card form {
+    margin-top: 10px;
+}

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>備忘錄</title>
+    <link rel="stylesheet" href="recipe-login.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>我的備忘錄</h1>
+
+    <form action="addMemo.php" method="post" enctype="multipart/form-data">
+
+        <label>備忘內容</label>
+        <textarea name="content" rows="4" required></textarea>
+
+        <label>上傳圖片</label>
+        <input type="file" name="image">
+
+        <button class="submit-btn" type="submit">新增備忘</button>
+
+    </form>
+
+    <hr>
+
+    <div class="memo-list">
+
+        <div class="memo-card">
+            <p>今天要寫作業</p>
+            <img src="test.jpg" alt="備忘圖片">
+
+            <form action="update.php" method="post">
+                <input type="hidden" name="id" value="1">
+                <textarea name="content">今天要寫作業</textarea>
+                <button class="submit-btn">修改</button>
+            </form>
+
+            <form action="delete.php" method="post">
+                <input type="hidden" name="id" value="1">
+                <button class="submit-btn">刪除</button>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
