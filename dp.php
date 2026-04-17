@@ -1,7 +1,7 @@
 <?php
 
 $host = "localhost";
-$db = '資料庫名稱';
+$db = 'a06';
 $user = 'root';
 $password = '';
 
