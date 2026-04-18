@@ -7,7 +7,7 @@ $username = $id;
 $password = $_GET['password'];
 $gender = $_GET['gender'];
 $nickname = $_GET['nickname'];
-$hobby = $_GET['hobby'];
+$hobby = $_POST['hobby'];
 
 $sql = "SELECT * FROM users WHERE username = ?";
 $stmt = $pdo->prepare($sql);
