@@ -27,7 +27,7 @@ try {
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$content, $id]);
 
-    header('Location: 備忘錄.html');
+    header('Location: Memo.html');
     exit;
 } catch (PDOException $e) {
     http_response_code(500);
