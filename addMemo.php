@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+require_once 'dp.php';
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     exit('Method Not Allowed');
@@ -12,14 +14,14 @@ if ($content === '') {
     exit('備忘內容不可為空');
 }
 
-$host = 'localhost';
-$db = 'a06';
-$user = 'root';
-$password = '';
-
 $userId = $_SESSION['user_id'] ?? null;
 $imagePath = null;
 $thumbPath = null;
+
+if ($userId === null) {
+    http_response_code(401);
+    exit('請先登入');
+}
 
 function createThumbnail(string $sourcePath, string $targetPath, int $maxWidth = 240, int $maxHeight = 240): bool
 {
@@ -97,6 +99,27 @@ function createThumbnail(string $sourcePath, string $targetPath, int $maxWidth =
     return $saved;
 }
 
+function buildUploadFileName(string $prefix, int $userId, string $originalName, string $extension, string $targetDir): string
+{
+    $baseName = pathinfo($originalName, PATHINFO_FILENAME);
+    $baseName = preg_replace('/[^A-Za-z0-9_-]+/', '_', $baseName ?? '');
+    $baseName = trim((string) $baseName, '_');
+    if ($baseName === '') {
+        $baseName = 'image';
+    }
+
+    $timePart = date('Ymd_His');
+    $candidate = sprintf('%s_u%d_%s_%s.%s', $prefix, $userId, $timePart, $baseName, $extension);
+    $counter = 1;
+
+    while (is_file($targetDir . '/' . $candidate)) {
+        $candidate = sprintf('%s_u%d_%s_%s_%d.%s', $prefix, $userId, $timePart, $baseName, $counter, $extension);
+        $counter++;
+    }
+
+    return $candidate;
+}
+
 if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
     if ($_FILES['image']['error'] !== UPLOAD_ERR_OK) {
         http_response_code(400);
@@ -133,7 +156,8 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE)
         exit('建立縮圖資料夾失敗');
     }
 
-    $fileName = uniqid('memo_', true) . '.' . $extMap[$mime];
+    $originalName = $_FILES['image']['name'] ?? '';
+    $fileName = buildUploadFileName('memo', (int) $userId, (string) $originalName, $extMap[$mime], $uploadDir);
     $targetAbsPath = $uploadDir . '/' . $fileName;
     $targetRelPath = 'uploads/' . $fileName;
 
@@ -142,7 +166,7 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE)
         exit('儲存圖片失敗');
     }
 
-    $thumbFileName = uniqid('thumb_', true) . '.' . $extMap[$mime];
+    $thumbFileName = buildUploadFileName('thumb', (int) $userId, (string) $originalName, $extMap[$mime], $thumbDir);
     $thumbAbsPath = $thumbDir . '/' . $thumbFileName;
     $thumbRelPath = 'uploads/thumbs/' . $thumbFileName;
 
@@ -159,17 +183,23 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE)
 }
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
+    $pdo->beginTransaction();
 
-    $sql = 'INSERT INTO dbmemo (user_id, content, image_path, thumb_path) VALUES (?, ?, ?, ?)';
+    $idStmt = $pdo->query("SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM dbmemo FOR UPDATE");
+    $newMemoId = (int) $idStmt->fetchColumn();
+
+    $sql = 'INSERT INTO dbmemo (id, user_id, content, image_path, thumb_path) VALUES (?, ?, ?, ?, ?)';
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$userId, $content, $imagePath, $thumbPath]);
+    $stmt->execute([$newMemoId, $userId, $content, $imagePath, $thumbPath]);
 
-    header('Location: 備忘錄.html');
+    $pdo->commit();
+
+    header('Location: Memo.php');
     exit;
 } catch (PDOException $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     http_response_code(500);
     exit('新增備忘失敗');
 }

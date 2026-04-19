@@ -1,4 +1,7 @@
 <?php
+session_start();
+
+require_once 'dp.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -11,24 +14,21 @@ if ($id <= 0) {
     exit('參數錯誤');
 }
 
-$host = 'localhost';
-$db = 'a06';
-$user = 'root';
-$password = '';
+$userId = $_SESSION['user_id'] ?? null;
+if ($userId === null) {
+    http_response_code(401);
+    exit('請先登入');
+}
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-
-    $findSql = 'SELECT image_path, thumb_path FROM dbmemo WHERE id = ? LIMIT 1';
+    $findSql = 'SELECT image_path, thumb_path FROM dbmemo WHERE id = ? AND user_id = ? LIMIT 1';
     $findStmt = $pdo->prepare($findSql);
-    $findStmt->execute([$id]);
+    $findStmt->execute([$id, (int) $userId]);
     $memo = $findStmt->fetch(PDO::FETCH_ASSOC);
 
-    $deleteSql = 'DELETE FROM dbmemo WHERE id = ?';
+    $deleteSql = 'DELETE FROM dbmemo WHERE id = ? AND user_id = ?';
     $deleteStmt = $pdo->prepare($deleteSql);
-    $deleteStmt->execute([$id]);
+    $deleteStmt->execute([$id, (int) $userId]);
 
     if ($memo) {
         $paths = [$memo['image_path'] ?? '', $memo['thumb_path'] ?? ''];
@@ -44,7 +44,7 @@ try {
         }
     }
 
-    header('Location: 備忘錄.html');
+    header('Location: Memo.php');
     exit;
 } catch (PDOException $e) {
     http_response_code(500);

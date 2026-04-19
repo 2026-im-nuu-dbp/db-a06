@@ -2,10 +2,9 @@
 
 require_once 'dp.php';
 
-header('Content-Type: application/json; charset=utf-8');
-
 function respondJson(int $statusCode, string $message, array $data = []): void
 {
+    header('Content-Type: application/json; charset=utf-8');
     http_response_code($statusCode);
     echo json_encode([
         'success' => $statusCode >= 200 && $statusCode < 300,
@@ -13,6 +12,18 @@ function respondJson(int $statusCode, string $message, array $data = []): void
         'data' => $data,
     ], JSON_UNESCAPED_UNICODE);
     exit;
+}
+
+function expectsJsonResponse(): bool
+{
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+    $requestedWith = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+
+    if (stripos($accept, 'application/json') !== false) {
+        return true;
+    }
+
+    return strcasecmp($requestedWith, 'XMLHttpRequest') === 0;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -38,7 +49,7 @@ if (!is_array($hobby)) {
 }
 
 $interests = implode(',', array_map('trim', $hobby));
-$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+$storedPassword = $password;
 
 $checkSql = "SELECT id FROM dbusers WHERE account = ? LIMIT 1";
 $checkStmt = $pdo->prepare($checkSql);
@@ -56,7 +67,7 @@ try {
 
     $insertSql = "INSERT INTO dbusers (id, account, nickname, password, gender, interests, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
     $insertStmt = $pdo->prepare($insertSql);
-    $insertStmt->execute([$newUserId, $account, $nickname, $hashedPassword, $gender, $interests]);
+    $insertStmt->execute([$newUserId, $account, $nickname, $storedPassword, $gender, $interests]);
 
     $pdo->commit();
 } catch (Throwable $e) {
@@ -70,8 +81,13 @@ $timeStmt = $pdo->prepare("SELECT created_at FROM dbusers WHERE id = ? LIMIT 1")
 $timeStmt->execute([$newUserId]);
 $createdAt = $timeStmt->fetchColumn();
 
-respondJson(201, '註冊成功', [
-    'id' => $newUserId,
-    'account' => $account,
-    'created_at' => $createdAt,
-]);
+if (expectsJsonResponse()) {
+    respondJson(201, '註冊成功', [
+        'id' => $newUserId,
+        'account' => $account,
+        'created_at' => $createdAt,
+    ]);
+}
+
+header('Location: BWMenu.html');
+exit;
