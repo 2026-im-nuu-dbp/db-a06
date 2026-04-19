@@ -2,9 +2,21 @@
 
 require_once 'dp.php';
 
+header('Content-Type: application/json; charset=utf-8');
+
+function respondJson(int $statusCode, string $message, array $data = []): void
+{
+    http_response_code($statusCode);
+    echo json_encode([
+        'success' => $statusCode >= 200 && $statusCode < 300,
+        'message' => $message,
+        'data' => $data,
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit('請從註冊表單送出資料');
+    respondJson(405, '請從註冊表單送出資料');
 }
 
 $account = trim($_POST['username'] ?? '');
@@ -14,8 +26,7 @@ $gender = trim($_POST['gender'] ?? '');
 $hobby = $_POST['hobby'] ?? [];
 
 if ($account === '' || $nickname === '' || $password === '') {
-    http_response_code(400);
-    exit('帳號、暱稱、密碼不可空白');
+    respondJson(400, '帳號、暱稱、密碼不可空白');
 }
 
 if (!in_array($gender, ['男', '女', '其他'], true)) {
@@ -34,12 +45,33 @@ $checkStmt = $pdo->prepare($checkSql);
 $checkStmt->execute([$account]);
 
 if ($checkStmt->fetch()) {
-    http_response_code(409);
-    exit('帳號已存在');
+    respondJson(409, '帳號已存在');
 }
 
-$insertSql = "INSERT INTO dbusers (account, nickname, password, gender, interests) VALUES (?, ?, ?, ?, ?)";
-$insertStmt = $pdo->prepare($insertSql);
-$insertStmt->execute([$account, $nickname, $hashedPassword, $gender, $interests]);
+$pdo->beginTransaction();
 
-echo '註冊成功';
+try {
+    $idStmt = $pdo->query("SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM dbusers FOR UPDATE");
+    $newUserId = (int) $idStmt->fetchColumn();
+
+    $insertSql = "INSERT INTO dbusers (id, account, nickname, password, gender, interests, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+    $insertStmt = $pdo->prepare($insertSql);
+    $insertStmt->execute([$newUserId, $account, $nickname, $hashedPassword, $gender, $interests]);
+
+    $pdo->commit();
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    respondJson(500, '註冊失敗，請稍後再試');
+}
+
+$timeStmt = $pdo->prepare("SELECT created_at FROM dbusers WHERE id = ? LIMIT 1");
+$timeStmt->execute([$newUserId]);
+$createdAt = $timeStmt->fetchColumn();
+
+respondJson(201, '註冊成功', [
+    'id' => $newUserId,
+    'account' => $account,
+    'created_at' => $createdAt,
+]);

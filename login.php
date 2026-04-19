@@ -3,17 +3,28 @@ session_start(); // 啟用 session
 
 require_once "dp.php";
 
+header('Content-Type: application/json; charset=utf-8');
+
+function respondJson(int $statusCode, string $message, array $data = []): void
+{
+    http_response_code($statusCode);
+    echo json_encode([
+        'success' => $statusCode >= 200 && $statusCode < 300,
+        'message' => $message,
+        'data' => $data,
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit('請從登入表單送出資料');
+    respondJson(405, '請從登入表單送出資料');
 }
 
 $username = trim($_POST['account'] ?? '');
 $password = $_POST['password'] ?? '';
 
 if ($username === '' || $password === '') {
-    http_response_code(400);
-    exit('帳號或密碼不可空白');
+    respondJson(400, '帳號或密碼不可空白');
 }
 
 $sql = "SELECT * FROM dbusers WHERE account = ?";
@@ -26,14 +37,12 @@ $logStmt = $pdo->prepare("INSERT INTO dblog (account, status) VALUES (?, ?)");
 
 if (!$user) {
     $logStmt->execute([$username, '失敗']);
-    echo "帳號不存在";
-    exit;
+    respondJson(404, '帳號不存在');
 }
 
 if (!password_verify($password, $user['password'])) {
     $logStmt->execute([$username, '失敗']);
-    echo "密碼錯誤";
-    exit;
+    respondJson(401, '密碼錯誤');
 }
 
 $logStmt->execute([$username, '成功']);
@@ -41,5 +50,8 @@ $logStmt->execute([$username, '成功']);
 $_SESSION['user_id'] = $user['id'];
 $_SESSION['username'] = $user['account'];
 
-echo "登入成功";
+respondJson(200, '登入成功', [
+    'id' => (int) $user['id'],
+    'account' => $user['account'],
+]);
 ?>
