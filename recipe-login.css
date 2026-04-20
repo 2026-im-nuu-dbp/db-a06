@@ -111,3 +111,22 @@ hr {
 .memo-card form {
     margin-top: 10px;
 }
+
+
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.log-table th,
+.log-table td {
+    border: 1.6px solid #111;
+    padding: 10px;
+    text-align: center;
+}
+
+.log-table th {
+    background: #111;
+    color: #fff;
+}
