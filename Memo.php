@@ -40,6 +40,7 @@ function h(string $value): string
 
     <h1>我的備忘錄</h1>
     <p class="note">登入帳號：<?= h((string) $username) ?></p>
+    <p><a href="log.php">查看登入紀錄</a></p>
 
     <form action="addMemo.php" method="post" enctype="multipart/form-data">
 
