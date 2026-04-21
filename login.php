@@ -45,7 +45,8 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
     writeLoginLog($pdo, $username, '失敗');
-    exit('登入失敗');
+    header('Location: BWMenuRegister.html');
+    exit;
 }
 
 $storedPassword = (string) ($user['password'] ?? '');
@@ -60,5 +61,5 @@ if ($isPasswordValid) {
 }
 
 writeLoginLog($pdo, $username, '失敗');
-exit('登入失敗');
+exit('密碼錯誤');
 ?>
