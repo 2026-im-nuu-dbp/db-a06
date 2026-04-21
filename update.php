@@ -141,22 +141,10 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE)
     }
 
     $tmpName = $_FILES['image']['tmp_name'];
-    $imageInfo = @getimagesize($tmpName);
-    if ($imageInfo === false) {
-        http_response_code(400);
-        exit('請上傳圖片檔案');
-    }
-
-    $mime = $imageInfo['mime'] ?? '';
-    $extMap = [
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        'image/gif' => 'gif'
-    ];
-
-    if (!isset($extMap[$mime])) {
-        http_response_code(400);
-        exit('僅支援 JPG、PNG、GIF');
+    $originalName = (string) ($_FILES['image']['name'] ?? '');
+    $extension = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+    if ($extension === '') {
+        $extension = 'dat';
     }
 
     $uploadDir = __DIR__ . '/uploads';
@@ -170,8 +158,7 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE)
         exit('建立縮圖資料夾失敗');
     }
 
-    $originalName = $_FILES['image']['name'] ?? '';
-    $fileName = buildUploadFileName('memo', (int) $userId, (string) $originalName, $extMap[$mime], $uploadDir);
+    $fileName = buildUploadFileName('memo', (int) $userId, $originalName, $extension, $uploadDir);
     $newImageAbsPath = $uploadDir . '/' . $fileName;
     $nextImagePath = 'uploads/' . $fileName;
 
@@ -180,16 +167,14 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE)
         exit('儲存圖片失敗');
     }
 
-    $thumbFileName = buildUploadFileName('thumb', (int) $userId, (string) $originalName, $extMap[$mime], $thumbDir);
+    $thumbFileName = buildUploadFileName('thumb', (int) $userId, $originalName, $extension, $thumbDir);
     $newThumbAbsPath = $thumbDir . '/' . $thumbFileName;
-    $nextThumbPath = 'uploads/thumbs/' . $thumbFileName;
 
-    if (!createThumbnail($newImageAbsPath, $newThumbAbsPath)) {
-        if (is_file($newImageAbsPath)) {
-            unlink($newImageAbsPath);
-        }
-        http_response_code(500);
-        exit('建立縮圖失敗');
+    if (createThumbnail($newImageAbsPath, $newThumbAbsPath)) {
+        $nextThumbPath = 'uploads/thumbs/' . $thumbFileName;
+    } else {
+        $newThumbAbsPath = '';
+        $nextThumbPath = '';
     }
 }
 
