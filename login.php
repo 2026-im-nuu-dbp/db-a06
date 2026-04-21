@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 require_once "dp.php";
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -12,7 +14,7 @@ if ($username === '' || $password === '') {
     exit('帳號或密碼不可空白');
 }
 
-$sql = "SELECT password FROM dbusers WHERE account = ? LIMIT 1";
+$sql = "SELECT id, account, password FROM dbusers WHERE account = ? LIMIT 1";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$username]);
 
@@ -26,7 +28,10 @@ $storedPassword = (string) ($user['password'] ?? '');
 $isPasswordValid = hash_equals($storedPassword, $password);
 
 if ($isPasswordValid) {
-    exit('登入成功');
+    $_SESSION['user_id'] = (int) ($user['id'] ?? 0);
+    $_SESSION['username'] = (string) ($user['account'] ?? $username);
+    header('Location: Memo.php');
+    exit;
 }
 
 exit('登入失敗');

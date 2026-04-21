@@ -3,7 +3,7 @@
 require_once 'dp.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: register.php');
+    header('Location: BWMenuRegister.html');
     exit;
 }
 
@@ -29,11 +29,24 @@ $interests = implode(',', array_map('trim', $hobby));
 $storedPassword = $password;
 
 try {
-    $insertSql = "INSERT INTO dbusers (account, nickname, password, gender, interests, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
+    // Work around schema without AUTO_INCREMENT on id.
+    $nextIdSql = "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM dbusers";
+    $nextIdStmt = $pdo->query($nextIdSql);
+    $nextId = (int) ($nextIdStmt->fetchColumn() ?: 1);
+
+    $insertSql = "INSERT INTO dbusers (id, account, nickname, password, gender, interests, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
     $insertStmt = $pdo->prepare($insertSql);
-    $insertStmt->execute([$account, $nickname, $storedPassword, $gender, $interests]);
+    $insertStmt->execute([$nextId, $account, $nickname, $storedPassword, $gender, $interests]);
+} catch (PDOException $e) {
+    if ($e->getCode() === '23000') {
+        exit('註冊失敗：帳號已存在');
+    }
+    if (str_contains($e->getMessage(), "Field 'id' doesn't have a default value")) {
+        exit('註冊失敗：dbusers.id 需設定 AUTO_INCREMENT，或先修正資料表結構');
+    }
+    exit('註冊失敗：' . $e->getMessage());
 } catch (Throwable $e) {
-    exit('註冊失敗');
+    exit('註冊失敗：' . $e->getMessage());
 }
 
 header('Location: BWMenu.html');
