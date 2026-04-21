@@ -25,72 +25,62 @@ function h(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
-?>
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>備忘錄</title>
-    <link rel="stylesheet" href="recipe-login.css">
-</head>
-<body>
 
-<div class="container">
+$cardsHtml = '';
 
-    <h1>我的備忘錄</h1>
-    <p class="note">登入帳號：<?= h((string) $username) ?></p>
-    <p><a href="log.php">查看登入紀錄</a></p>
+if (!$memos) {
+    $cardsHtml = '<div class="memo-card"><p>目前還沒有備忘，先新增第一筆吧！</p></div>';
+} else {
+    foreach ($memos as $memo) {
+        $memoId = (int) ($memo['id'] ?? 0);
+        $content = (string) ($memo['content'] ?? '');
+        $displayImage = (string) (($memo['thumb_path'] ?? '') !== '' ? $memo['thumb_path'] : ($memo['image_path'] ?? ''));
 
-    <form action="addMemo.php" method="post" enctype="multipart/form-data">
+        $cardsHtml .= '<div class="memo-card">';
+        $cardsHtml .= '<p>' . nl2br(h($content)) . '</p>';
 
-        <label>備忘內容</label>
-        <textarea name="content" rows="4" required></textarea>
+        if ($displayImage !== '') {
+            $cardsHtml .= '<img src="' . h($displayImage) . '" alt="備忘圖片">';
+        }
 
-        <label>上傳圖片</label>
-        <input type="file" name="image" accept="image/jpeg,image/png,image/gif">
+        $cardsHtml .= '<form action="update.php" method="post" enctype="multipart/form-data">';
+        $cardsHtml .= '<input type="hidden" name="id" value="' . $memoId . '">';
+        $cardsHtml .= '<textarea name="content">' . h($content) . '</textarea>';
+        $cardsHtml .= '<button class="submit-btn">修改</button>';
+        $cardsHtml .= '</form>';
 
-        <button class="submit-btn" type="submit">新增備忘</button>
+        $cardsHtml .= '<form action="delete.php" method="post">';
+        $cardsHtml .= '<input type="hidden" name="id" value="' . $memoId . '">';
+        $cardsHtml .= '<button class="submit-btn">刪除</button>';
+        $cardsHtml .= '</form>';
 
-    </form>
+        $cardsHtml .= '</div>';
+    }
+}
 
-    <hr>
+$templatePath = __DIR__ . DIRECTORY_SEPARATOR . 'Memo.html';
 
-    <div class="memo-list">
-        <?php if (!$memos): ?>
-            <p class="note">目前還沒有備忘，先新增第一筆吧！</p>
-        <?php endif; ?>
+if (!is_file($templatePath)) {
+    http_response_code(500);
+    echo 'Template file Memo.html not found.';
+    exit;
+}
 
-        <?php foreach ($memos as $memo): ?>
-            <div class="memo-card">
-                <p><?= nl2br(h((string) ($memo['content'] ?? ''))) ?></p>
+$template = file_get_contents($templatePath);
 
-                <?php
-                $displayImage = (string) (($memo['thumb_path'] ?? '') !== '' ? $memo['thumb_path'] : ($memo['image_path'] ?? ''));
-                ?>
-                <?php if ($displayImage !== ''): ?>
-                    <img src="<?= h($displayImage) ?>" alt="備忘圖片">
-                <?php endif; ?>
+if ($template === false) {
+    http_response_code(500);
+    echo 'Unable to load template.';
+    exit;
+}
 
-                <p class="note">建立時間：<?= h((string) ($memo['created_at'] ?? '')) ?></p>
+$pattern = '/<div class="memo-card">[\s\S]*?<\/div>/';
+$result = preg_replace($pattern, $cardsHtml, $template, 1);
 
-                <form action="update.php" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="id" value="<?= (int) ($memo['id'] ?? 0) ?>">
-                    <textarea name="content" rows="3" required><?= h((string) ($memo['content'] ?? '')) ?></textarea>
-                    <label>重新上傳圖片（可選）</label>
-                    <input type="file" name="image" accept="image/jpeg,image/png,image/gif">
-                    <button class="submit-btn" type="submit">修改</button>
-                </form>
+if ($result === null) {
+    http_response_code(500);
+    echo 'Failed to render template.';
+    exit;
+}
 
-                <form action="delete.php" method="post">
-                    <input type="hidden" name="id" value="<?= (int) ($memo['id'] ?? 0) ?>">
-                    <button class="submit-btn" type="submit">刪除</button>
-                </form>
-            </div>
-        <?php endforeach; ?>
-    </div>
-
-</div>
-
-</body>
-</html>
+echo $result;

@@ -33,9 +33,7 @@ function h(string $value): string
     <link rel="stylesheet" href="recipe-login.css">
 </head>
 <body>
-
 <div class="container">
-
     <h1>登入紀錄</h1>
     <p><a href="Memo.php">回到備忘錄</a></p>
 
@@ -47,14 +45,10 @@ function h(string $value): string
                 <th>結果</th>
             </tr>
         </thead>
-
         <tbody>
-            <?php if (!$logs): ?>
-                <tr>
-                    <td colspan="3">目前沒有登入紀錄</td>
-                </tr>
-            <?php endif; ?>
-
+        <?php if (!$logs): ?>
+            <tr><td colspan="3">目前沒有登入紀錄</td></tr>
+        <?php else: ?>
             <?php foreach ($logs as $log): ?>
                 <tr>
                     <td><?= h((string) ($log['account'] ?? '')) ?></td>
@@ -62,9 +56,9 @@ function h(string $value): string
                     <td><?= h((string) ($log['status'] ?? '')) ?></td>
                 </tr>
             <?php endforeach; ?>
+        <?php endif; ?>
         </tbody>
     </table>
-
 </div>
 </body>
 </html>
