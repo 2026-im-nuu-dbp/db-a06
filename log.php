@@ -24,4 +24,24 @@ function h(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
+
+
+$rows = '';
+
+if (!$logs) {
+    $rows = '<tr><td colspan="3">沒有資料</td></tr>';
+} else {
+    foreach ($logs as $log) {
+        $rows .= '
+        <tr>
+            <td>' . h($log['account']) . '</td>
+            <td>' . h($log['login_time']) . '</td>
+            <td>' . h($log['status']) . '</td>
+        </tr>';
+    }
+}
+
+$template = file_get_contents('log.html');
+
+echo str_replace('<!--rows-->', $rows, $template);
 ?>

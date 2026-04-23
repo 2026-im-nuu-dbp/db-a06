@@ -8,8 +8,8 @@ if (!$userId) {
     exit;
 }
 
-// 取得資料
-$stmt = $pdo->prepare('SELECT id, content, image_path FROM dbmemo WHERE user_id=? ORDER BY created_at DESC, id DESC');
+// 抓資料
+$stmt = $pdo->prepare('SELECT id, content, image_path FROM dbmemo WHERE user_id=? ORDER BY id DESC');
 $stmt->execute([$userId]);
 $memos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -18,34 +18,32 @@ function h($v) {
     return htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
 }
 
-// 組畫面
 $cardsHtml = '';
 
-if (!$memos) {
-    $cardsHtml = '<div class="memo-card"><p>目前還沒有備忘</p></div>';
-} else {
-    foreach ($memos as $m) {
+foreach ($memos as $m) {
 
-        $img = $m['image_path'] ?? '';
-        $cardsHtml .= '
-        <div class="memo-card">
-            <p>' . nl2br(h($m['content'])) . '</p>' .
+    $img = $m['image_path'] ?? '';
 
-            ($img ? '<img src="' . h($img) . '?t=' . time() . '">' : '') . '
+    $cardsHtml .= '
+    <div class="memo-card">
 
-            <form action="update.php" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="id" value="' . $m['id'] . '">
-                <textarea name="content">' . h($m['content']) . '</textarea>
-                <input type="file" name="image">
-                <button>修改</button>
-            </form>
+        <p>' . nl2br(h($m['content'])) . '</p>' .
 
-            <form action="delete.php" method="post">
-                <input type="hidden" name="id" value="' . $m['id'] . '">
-                <button>刪除</button>
-            </form>
-        </div>';
-    }
+        ($img ? '<img src="/forms/db-a06/' . h($img) . '" style="max-width:200px;">' : '') . '
+
+        <form action="update.php" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="' . $m['id'] . '">
+            <textarea name="content">' . h($m['content']) . '</textarea>
+            <input type="file" name="image">
+            <button>修改</button>
+        </form>
+
+        <form action="delete.php" method="post">
+            <input type="hidden" name="id" value="' . $m['id'] . '">
+            <button>刪除</button>
+        </form>
+
+    </div>';
 }
 
 // 套模板
