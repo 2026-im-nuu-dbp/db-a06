@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>註冊</title>
+    <link rel="stylesheet" href="recipe-login.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>註冊帳號</h1>
+
+    <form action="register.php" method="post">
+
+        <label>帳號</label>
+        <input type="text" name="username" required>
+
+        <label>暱稱</label>
+        <input type="text" name="nickname" required>
+
+        <label>密碼</label>
+        <input type="password" name="password" required>
+
+        <fieldset>
+            <legend>性別</legend>
+            <label class="inline-option">
+                <input type="radio" name="gender" value="男"> 男
+            </label>
+            <label class="inline-option">
+                <input type="radio" name="gender" value="女"> 女
+            </label>
+        </fieldset>
+
+        <fieldset>
+            <legend>興趣</legend>
+            <label class="inline-option">
+                <input type="checkbox" name="hobby[]" value="運動"> 運動
+            </label>
+            <label class="inline-option">
+                <input type="checkbox" name="hobby[]" value="音樂"> 音樂
+            </label>
+            <label class="inline-option">
+                <input type="checkbox" name="hobby[]" value="遊戲"> 遊戲
+            </label>
+        </fieldset>
+
+        <button class="submit-btn" type="submit">註冊</button>
+
+    </form>
+
+    <p class="note">
+        已有帳號？
+        <a href="BWMenu.html" class="link-btn">去登入</a>
+    </p>
+
+</div>
+
+</body>
+</html>

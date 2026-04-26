@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/VOLNfwbe)
 # 作業 5 資料庫基礎存取
 
 ## 繳交說明
@@ -24,7 +25,10 @@
    b. 多行文字
    c. 上傳一張圖片，進行縮圖後存放
    d. ...
-6. 圖文備忘功能具備 新增、刪除、修改、列出
+6. 圖新文備忘功能具備 增、刪除、修改、列出
 7. 登入資料可以被瀏覽
 
 ## 自行設計的內容說明(同學自填)
+我們設想的是用備忘錄來記錄食譜，好讓有下廚需求的人可以使用
+
+
